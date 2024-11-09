@@ -1,36 +1,43 @@
-import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import {collection, addDoc} from 'firebase/firestore';
-import {db} from '../firebase/config'
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '../firebase/config';
 // styles
-import './create.css'
+import './create.css';
 
 export default function Create() {  
-  const [title, setTitle] = useState('')
-  const [author, setAuthor] = useState('')
-  const [description, setDescription] = useState('')
-  
-  const navigate = useNavigate()
-  
+  const [title, setTitle] = useState('');
+  const [author, setAuthor] = useState('');
+  const [description, setDescription] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
+  const navigate = useNavigate();
+  
   const handleSubmit = async (e) => {
-    e.preventDefault()   
-    const article = {title,author,description};
-    const ref = collection(db, 'articles')
-    await addDoc(ref,article)
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
-    // setTitle("");
-    // setAuthor("");
-    // setDescription("");
-
-    navigate('/')
-  }
+    try {
+      const article = { title, author, description };
+      const ref = collection(db, 'articles');
+      await addDoc(ref, article);
+      setTitle('');
+      setAuthor('');
+      setDescription('');
+      navigate('/');
+    } catch (err) {
+      setError('Failed to add article. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="create">
       <h2 className="page-title">Add a New Recipe</h2>
       <form onSubmit={handleSubmit}>
-
         <label>
           <span>Title:</span>
           <input 
@@ -60,8 +67,12 @@ export default function Create() {
           />
         </label>
 
-        <button className="btn">submit</button>
+        <button className="btn" type="submit" disabled={loading}>
+          {loading ? 'Submitting...' : 'Submit'}
+        </button>
       </form>
+
+      {error && <p className="error">{error}</p>}
     </div>
-  )
+  );
 }
